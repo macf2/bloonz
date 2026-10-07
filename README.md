@@ -1,6 +1,6 @@
 # bloonz
 
-# 1st Deliverable
+# 1st Deliverable (oct 25th)
 - Make a map
   - Make it so that turrets can be placed on the map
     - Make it so that turrets cant be placed on the path
