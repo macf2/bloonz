@@ -3,14 +3,19 @@ from enum import Enum, auto
 
 import arcade
 import arcade.gui
+import arcade.color as Color
+import arcade.key as Key
+
 from pyglet.math import Vec2
 
 from sprites import Bloon, BloonType, Dart, Monkey, MonkeyType
 from track import MIN_NODES, Track
 
+
 class Stage(Enum):
     PRE_ROUND = auto()
     MID_ROUND = auto()
+
 
 class World(arcade.View):
     def __init__(self):
@@ -32,51 +37,113 @@ class World(arcade.View):
         self.spawn_phase = 0.0
         self.spawn_wait = 0.0
 
-        self.hud = arcade.Text(
-            "", 10, self.window.height - 30, arcade.color.WHITE, 16)
+        self.init_ui()
+
+    def init_ui(self):
+        self.selectedMonkey = None
 
         self.ui = arcade.gui.UIManager()
         anchor = self.ui.add(arcade.gui.UIAnchorLayout())
+
+        self.money_label = anchor.add(
+            arcade.gui.UILabel(
+                text="",
+                width=260,
+                height=34,
+                font_size=20,
+                bold=True
+            ),
+            anchor_x="left",
+            anchor_y="top",
+            align_x=200,
+            align_y=-200
+        )
+
+        self.lives_label = anchor.add(
+            arcade.gui.UILabel(
+                text="",
+                width=260,
+                height=34,
+                font_size=20,
+                bold=True
+            ),
+            anchor_x="left",
+            anchor_y="top",
+            align_x=200,
+            align_y=-234
+        )
+
         self.start_button = anchor.add(
-            arcade.gui.UIFlatButton(text="Start round", width=150, height=100),
-            anchor_x="left", align_x=100,
-            anchor_y="top", align_y=-100,
+            arcade.gui.UIFlatButton(
+                text="Start round",
+                width=150,
+                height=100
+            ),
+            anchor_x="left",
+            align_x=100,
+            anchor_y="top",
+            align_y=-100,
         )
 
         @self.start_button.event("on_click")
         def on_click(event):
             self.start_round()
 
-    def on_show_view(self):
-        self.ui.enable()
+    def on_update(self, dt):
+        self.update_ui()
 
-    def on_hide_view(self):
-        self.ui.disable()
+        keys = self.held_keys
 
-    def on_mouse_motion(self, x, y, dx, dy):
-        self.mousePosition = Vec2(x, y)
+        # MF: Move the selected nodes
+        dx = 0.0
+        if Key.RIGHT in keys:
+            dx += 1.0
+        if Key.LEFT in keys:
+            dx -= 1.0
 
-    def on_mouse_drag(self, x, y, dx, dy, buttons, modifiers):
-        self.mousePosition = Vec2(x, y)
+        dy = 0.0
+        if Key.UP in keys:
+            dy += 1.0
+        if Key.DOWN in keys:
+            dy -= 1.0
 
-    def on_key_press(self, symbol, modifiers):
-        self.held_keys.add(symbol)
-    
-        if arcade.key.I == symbol:
-            self.try_place_monkey(MonkeyType.DART, self.mousePosition)
+        speed = 60 * dt
+        self.track.move_selected(dx * speed, dy * speed)
 
-        if arcade.key.T == symbol:
-            self.track.add_node(self.mousePosition)
+        # MF: Per stage updates
+        match self.stage:
+            case Stage.PRE_ROUND:
+                pass
 
-        if arcade.key.Y == symbol:
-            self.track.cycle_selected()
+            case Stage.MID_ROUND:
+                self.update_mid_round(dt)
 
-        if arcade.key.O == symbol:
-            print("Saving and quiting...")
-            self.go_to_title()
+    def on_draw(self):
+        self.clear()
 
-    def on_key_release(self, symbol, modifiers):
-        self.held_keys.discard(symbol)
+        if self.track.line_points:
+            arcade.draw_line_strip(self.track.line_points, (100, 100, 100), 10)
+        for i, node in enumerate(self.track.nodes):
+            color = Color.RED if i == self.track.selected else Color.BLUE
+            arcade.draw_point(node.x, node.y, color, 10)
+
+        self.bloons.draw(pixelated=True)
+        self.monkeys.draw(pixelated=True)
+        self.darts.draw(pixelated=True)
+
+        if self.selectedMonkey:
+            m = self.selectedMonkey
+            arcade.draw_circle_outline(
+                m.position.x,
+                m.position.y,
+                m.type.radius,
+                Color.YELLOW)
+
+        self.ui.draw()
+
+    def update_ui(self):
+        self.money_label.text = f"{self.money}"
+        self.lives_label.text = f"{self.lives}"
 
     def go_to_title(self):
         # MF: TODO: do something about circular dependency
@@ -103,105 +170,103 @@ class World(arcade.View):
         else:
             print("Too close")
 
-    def on_update(self, dt):
-        keys = self.held_keys
-
-        # MF: Move the selected nodes
-        dx = 0.0
-        if arcade.key.RIGHT in keys:
-            dx += 1.0
-        if arcade.key.LEFT in keys:
-            dx -= 1.0
-
-        dy = 0.0
-        if arcade.key.UP in keys:
-            dy += 1.0
-        if arcade.key.DOWN in keys:
-            dy -= 1.0
-
-        speed = 60 * dt
-        self.track.move_selected(dx * speed, dy * speed)
-
-        # MF: Per stage updates
-        match self.stage:
-            case Stage.PRE_ROUND:
-                pass
-
-            case Stage.MID_ROUND:
-                self.update_mid_round(dt)
-
     def update_mid_round(self, dt):
-        self.spawn_bloons(dt)
-
-        self.bloons.update(dt)
-        for bloon in list(self.bloons):
-            if bloon.escaped:
-                self.lives -= bloon.type.rbe
-                bloon.remove_from_sprite_lists()
 
         if self.lives <= 0:
             print("you are dead!")
             self.go_to_title()
             return
 
-        self.shoot_monkeys(dt)
-
-        self.darts.update(dt)
-        for dart in list(self.darts):
-            self.hit_bloons(dart)
+        self.spawn_bloons(dt)
+        self.update_monkeys(dt)
+        self.update_bloons(dt)
+        self.update_darts(dt)
 
     def spawn_bloons(self, dt):
         if 0 < math.sin(self.spawn_phase) and self.spawn_wait <= 0:
-            self.bloons.append(Bloon(self.track, BloonType.RED))
+            self.bloons.append(Bloon(BloonType.RED, 0.0))
             self.spawn_wait = 1.0 / 6.0
-
         self.spawn_phase += 6.0 * dt
         self.spawn_wait -= dt
 
-    def shoot_monkeys(self, dt):
-        for monkey in self.monkeys:
+    def update_monkeys(self, dt):
+        for monkey in list(self.monkeys):
             monkey.cooldown -= dt
 
-            # MF: TODO: add more than  Target closest
-            closest = arcade.get_closest_sprite(monkey, self.bloons)
-            if closest is None:
+            if 0.0 < monkey.cooldown:
                 continue
 
-            bloon, distance = closest
-            if distance <= monkey.range and monkey.cooldown <= 0.0:
-                direction = Vec2(*bloon.position) - Vec2(*monkey.position)
-                self.darts.append(Dart(monkey, direction))
-                monkey.cooldown = monkey.reload_time
+            # MF: TODO: add more than target closest
+            bloon, distance = arcade.get_closest_sprite(monkey, self.bloons)
 
-    def hit_bloons(self, dart):
+            if bloon:
+                in_range = distance <= monkey.range
+                if in_range:
+                    direction = Vec2(*bloon.position) - Vec2(*monkey.position)
+                    self.darts.append(Dart(monkey, direction))
+                    monkey.cooldown = monkey.reload_time
 
-        # MF:  lazily remove dart??
-        if not 0 <= dart.center_x <= self.window.width or not 0 <= dart.center_y <= self.window.height:
-            dart.remove_from_sprite_lists()
-            return
+    def update_bloons(self, dt):
+        for bloon in list(self.bloons):
+            speed = self.track.derivative(bloon.track_distance).length()
+            bloon.track_distance += bloon.type.speed * dt / speed
+            bloon.position = self.track.point(bloon.track_distance)
 
-        for bloon in arcade.check_for_collision_with_list(dart, self.bloons):
-            self.money += bloon.type.rbe
-            bloon.remove_from_sprite_lists()
+    def update_darts(self, dt):
+        for dart in list(self.darts):
+            dart.position += dart.velocity * dt
 
-            dart.pierce_left -= 1
-            if dart.pierce_left <= 0:
+            on_screen = True
+            on_screen &= 0 <= dart.center_x <= self.window.width
+            on_screen &= 0 <= dart.center_y <= self.window.height
+            if not on_screen:
                 dart.remove_from_sprite_lists()
-                return
 
-    def on_draw(self):
-        self.clear()
+            for bloon in arcade.check_for_collision_with_list(dart, self.bloons):
+                self.money += bloon.type.rbe
+                bloon.remove_from_sprite_lists()
 
-        if self.track.line_points:
-            arcade.draw_line_strip(self.track.line_points, (100, 100, 100), 10)
-        for i, node in enumerate(self.track.nodes):
-            color = arcade.color.RED if i == self.track.selected else arcade.color.BLUE
-            arcade.draw_point(node.x, node.y, color, 10)
+                dart.parent.pop_count += 1
+                dart.pierce_left -= 1
 
-        self.bloons.draw(pixelated=True)
-        self.monkeys.draw(pixelated=True)
-        self.darts.draw(pixelated=True)
+                if dart.pierce_left <= 0:
+                    dart.remove_from_sprite_lists()
+                    break
 
-        self.hud.text = f"Round {self.round}   ${self.money}   Lives {self.lives}"
-        self.hud.draw()
-        self.ui.draw()
+    ###########################
+    # MF: Unimportant callbacks
+
+    def on_show_view(self):
+        self.ui.enable()
+
+    def on_hide_view(self):
+        self.ui.disable()
+
+    def on_mouse_press(self, x, y, button, modifiers):
+        hits = arcade.get_sprites_at_point((x, y), self.monkeys)
+        self.selectedMonkey = hits[0] if hits else None
+
+    def on_mouse_motion(self, x, y, dx, dy):
+        self.mousePosition = Vec2(x, y)
+
+    def on_mouse_drag(self, x, y, dx, dy, buttons, modifiers):
+        self.mousePosition = Vec2(x, y)
+
+    def on_key_press(self, symbol, modifiers):
+        self.held_keys.add(symbol)
+
+        if Key.I == symbol:
+            self.try_place_monkey(MonkeyType.DART, self.mousePosition)
+
+        if Key.T == symbol:
+            self.track.add_node(self.mousePosition)
+
+        if Key.Y == symbol:
+            self.track.cycle_selected()
+
+        if Key.O == symbol:
+            print("Saving and quiting...")
+            self.go_to_title()
+
+    def on_key_release(self, symbol, modifiers):
+        self.held_keys.discard(symbol)
