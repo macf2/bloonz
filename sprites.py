@@ -41,11 +41,15 @@ class MonkeyType(Enum):
 
     @property
     def cost(self):
-        return {MonkeyType.DART: 250}[self]
+        return {
+            MonkeyType.DART: 250
+        }[self]
 
     @property
     def radius(self):
-        return {MonkeyType.DART: 10}[self]
+        return {
+            MonkeyType.DART: 10
+        }[self]
 
 class Monkey(arcade.Sprite):
     SIZE = 48
