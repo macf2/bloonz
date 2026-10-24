@@ -181,8 +181,8 @@ class World(arcade.View):
                 Color.YELLOW)
         if self.placing:
             self.ghost.position = self.mousePosition
-            too_close = self.track.distance_to(self.mousePosition) <= self.placing.radius + 10
-            if too_close:
+            self.too_close = not self.can_place(self.placing, self.ghost.position)
+            if self.too_close:
                 self.ghost.color = Color.RED
             else:
                 self.ghost.color = Color.WHITE
@@ -215,16 +215,19 @@ class World(arcade.View):
         print("Started round")
         self.stage = Stage.MID_ROUND
         self.start_button.visible = False
-
+    def can_place(self, type, position):
+        d = type.radius + 10
+        return d < self.track.distance_to(position) and not arcade.check_for_collision_with_list(self.ghost, self.monkeys)
     def try_place_monkey(self, type, position):
         if self.money < type.cost:
             return
 
-        d = type.radius + 10
-        if d < self.track.distance_to(position):
+        
+        if self.can_place(type,position):
             self.monkeys.append(Monkey(position, type))
             self.money -= type.cost
         else:
+            
             print("Too close")
 
     def update_mid_round(self, dt):
