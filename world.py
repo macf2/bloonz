@@ -19,7 +19,9 @@ class Stage(Enum):
 
 class World(arcade.View):
     def __init__(self):
-        super().__init__(background_color=(70, 140, 60))
+        super().__init__()
+
+        self.background = arcade.load_texture(":assets:/TEST_MAP.jpg")
 
         self.track = Track()
         self.bloons = arcade.SpriteList()
@@ -161,6 +163,17 @@ class World(arcade.View):
 
     def on_draw(self):
         self.clear()
+
+        # Draws Background image
+        arcade.draw_texture_rect(
+            self.background,
+            arcade.LBWH(
+                0,
+                0,
+                self.window.width,
+                self.window.height
+            )
+        )
 
         if self.track.line_points:
             arcade.draw_line_strip(self.track.line_points, (100, 100, 100), 10)
