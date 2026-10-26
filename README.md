@@ -13,3 +13,18 @@
   - Make it so that once the sprite is placed it can't be moved
   - Make it so that the sprite can be right clicked on to remove the sprite once its placed
 
+
+
+# 2nd Sprint objectives
+    
+    - MAC:
+        - Refactor to make each monkey use different classes, with a base monkey class
+        - premade maps with a main menu for map selection
+
+    - ISAAC:
+        - map editor
+        - round mechanics
+
+    - NICO:
+        - Make more monkeys
+        - different bloons
