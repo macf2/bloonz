@@ -320,6 +320,16 @@ class World(arcade.View):
         self.ui.disable()
 
     def on_mouse_press(self, x, y, button, modifiers):
+        #right click to delete
+        
+        if button == arcade.MOUSE_BUTTON_RIGHT:
+            hits = arcade.get_sprites_at_point((x,y), self.monkeys)
+            
+            if hits:
+                monkey = hits[0]
+                monkey.kill()
+                self.selectedMonkey = None
+            return
         #check to see if clicking menu
         for monkey_type, buyable_tower in self.menu_items:
             if buyable_tower.rect.point_in_rect((x,y)):
