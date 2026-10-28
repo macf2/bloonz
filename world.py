@@ -245,7 +245,6 @@ class World(arcade.View):
             self.monkeys.append(monkey)
             self.money -= monkey.cost
         else:
-
             print("Too close")
 
     def update_mid_round(self, dt):
@@ -262,7 +261,7 @@ class World(arcade.View):
         self.monkeys.update(dt, self.bloons, self.projectiles)
         self.bloons.update(dt, self.track)
         self.projectiles.update(dt, self.bloons)
-        
+
         self.remove_dead_entities()
 
     def spawn_bloons(self, dt):
