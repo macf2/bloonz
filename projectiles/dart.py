@@ -1,0 +1,6 @@
+
+
+
+
+class DartProjectile(IProjectile):
+    pass

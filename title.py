@@ -1,7 +1,20 @@
 import arcade
 import arcade.gui
 
-from world import World
+# from world import World
+
+"""
+    MF: TODO: 
+
+
+    play button
+
+    then a map selection screen like btd6
+
+    
+
+
+"""
 
 class Title(arcade.View):
     def __init__(self):
@@ -14,8 +27,8 @@ class Title(arcade.View):
 
         @play_button.event("on_click")
         def on_click(event):
-            print("SAVE 1 SELECTED")
-            self.window.show_view(World())
+            pass
+            # self.window.show_view(World())
 
     def on_show_view(self):
         self.ui.enable()

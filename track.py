@@ -14,30 +14,19 @@ class Track:
     def __init__(self):
         self.nodes: list[Vec2] = []
         self.selected = 0
-        self._line_points = None
+
+        self._cached_draw_samples = None
+        self._cached_distance_to_samples = None
 
     @property
     def end(self):
         return len(self.nodes) - 3.0
 
-    def add_node(self, position):
-        self.nodes.append(Vec2(*position))
-        self._line_points = None
-
-    def cycle_selected(self):
-        if self.nodes:
-            self.selected = (self.selected + 1) % len(self.nodes)
-
-    def move_selected(self, dx, dy):
-        if self.nodes:
-            self.nodes[self.selected] += Vec2(dx, dy)
-            self._line_points = None
-
-    def _segment(self, t):
+    def _get_segment_nodes(self, t):
         i = max(0, min(math.floor(t), len(self.nodes) - 4))
         return self.nodes[i:i + 4], t - i
 
-    def point(self, t):
+    def get_point_at(self, t):
         (p0, p1, p2, p3), t = self._segment(t)
         t2 = t * t
         t3 = t2 * t
@@ -48,7 +37,7 @@ class Track:
         q4 = t3 - t2
         return (p0 * q1 + p1 * q2 + p2 * q3 + p3 * q4) * 0.5
 
-    def derivative(self, t):
+    def get_derivative_at(self, t):
         (p0, p1, p2, p3), t = self._segment(t)
         t2 = t * t
 
@@ -58,7 +47,7 @@ class Track:
         dq4 = 3.0 * t2 - 2.0 * t
         return (p0 * dq1 + p1 * dq2 + p2 * dq3 + p3 * dq4) * 0.5
 
-    def _sample(self, step):
+    def _generate_samples(self, step):
         steps = int(self.end / step)
         return [self.point(i * step) for i in range(steps)] + [self.point(self.end)]
 
@@ -78,6 +67,31 @@ class Track:
 
         # MF: TODO: Lerp between the two closest samples so that
         # long track segments are not choppy
-        samples = self._sample(CLOSEST_POINT_STEP)
-        distances = [(sample - position).length() for sample in samples]
+        distances = [
+            (sample - position).length() for sample in self.line_points
+            ]
+        
         return min(distances)
+
+    def draw(self):
+        if self.track.line_points:
+            arcade.draw_line_strip(self.get_draw_samples(), (100, 100, 100), 10)
+
+        for i, node in enumerate(self.track.nodes):
+            color = Color.RED if i == self.track.selected else Color.BLUE
+            arcade.draw_point(node.x, node.y, color, 10)
+
+    # MF: TODO: These are probably going to get removed when map editor 
+    def add_node(self, position):
+        self.nodes.append(Vec2(*position))
+        self._cached_draw_samples = None
+        self._cached_distance_to_samples = None
+
+    def cycle_selected(self):
+        if self.nodes:
+            self.selected = (self.selected + 1) % len(self.nodes)
+
+    def move_selected(self, dx, dy):
+        if self.nodes:
+            self.nodes[self.selected] += Vec2(dx, dy)
+            self._line_points = None

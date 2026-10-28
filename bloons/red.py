@@ -1,0 +1,5 @@
+
+
+
+class RedBloon(IBloon):
+    pass

@@ -1,0 +1,4 @@
+
+
+class BombProjectile(IProjectile):
+    pass

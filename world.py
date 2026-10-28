@@ -33,7 +33,7 @@ class World(arcade.View):
         self.money = 650
         self.lives = 40
 
-        self.mousePosition = Vec2()
+        self.mouse_position = Vec2()
         self.held_keys = set()
 
         self.spawn_phase = 0.0
@@ -42,7 +42,7 @@ class World(arcade.View):
         self.init_ui()
 
     def init_ui(self):
-        self.selectedMonkey = None
+        self.selected_monkey = None
         self.placing = None
         self.ghost = None
         self.ui = arcade.gui.UIManager()
@@ -164,7 +164,7 @@ class World(arcade.View):
     def on_draw(self):
         self.clear()
 
-        # Draws Background image
+        # Isaac: Draws Background image
         arcade.draw_texture_rect(
             self.background,
             arcade.LBWH(
@@ -175,16 +175,13 @@ class World(arcade.View):
             )
         )
 
-        if self.track.line_points:
-            arcade.draw_line_strip(self.track.line_points, (100, 100, 100), 10)
-        for i, node in enumerate(self.track.nodes):
-            color = Color.RED if i == self.track.selected else Color.BLUE
-            arcade.draw_point(node.x, node.y, color, 10)
+        self.track.draw()
 
         self.bloons.draw(pixelated=True)
         self.monkeys.draw(pixelated=True)
         self.darts.draw(pixelated=True)
 
+        # Nico: Draw the selected monkey's shoot radius
         if self.selectedMonkey:
             m = self.selectedMonkey
             arcade.draw_circle_outline(
@@ -192,6 +189,8 @@ class World(arcade.View):
                 m.position.y,
                 m.range,
                 Color.YELLOW)
+
+        # Nico: Color the ghost monkey if its unable to be placed
         if self.placing:
             self.ghost.position = self.mousePosition
             self.too_close = not self.can_place(self.placing, self.ghost.position)
@@ -207,8 +206,6 @@ class World(arcade.View):
                 self.ghost.range,
                 Color.YELLOW)
         
-            
-
         self.ui.draw()
 
     def update_ui(self):
@@ -228,13 +225,16 @@ class World(arcade.View):
         print("Started round")
         self.stage = Stage.MID_ROUND
         self.start_button.visible = False
+
+    
     def can_place(self, type, position):
+        # MF: TODO: the +10 is just a magic number for the width of the track
         d = type.radius + 10
         return d < self.track.distance_to(position) and not arcade.check_for_collision_with_list(self.ghost, self.monkeys)
+    
     def try_place_monkey(self, type, position):
         if self.money < type.cost:
             return
-
         
         if self.can_place(type,position):
             self.monkeys.append(Monkey(position, type))
@@ -244,44 +244,27 @@ class World(arcade.View):
             print("Too close")
 
     def update_mid_round(self, dt):
-
         if self.lives <= 0:
             print("you are dead!")
             self.go_to_title()
             return
-
+        
         self.spawn_bloons(dt)
-        self.update_monkeys(dt)
-        self.update_bloons(dt)
-        self.update_darts(dt)
 
+        # MF: TODO: Eventually we are going to want a 'round engine' type of thing
+        # self.round_spawner.update(dt)
+
+        self.monkeys.update(dt)
+        self.bloons.update(dt)
+        self.projectiles.update(dt)
+
+        
     def spawn_bloons(self, dt):
         if 0 < math.sin(self.spawn_phase) and self.spawn_wait <= 0:
             self.bloons.append(Bloon(BloonType.RED, 0.0))
             self.spawn_wait = 1.0 / 6.0
         self.spawn_phase += 6.0 * dt
         self.spawn_wait -= dt
-
-    def update_monkeys(self, dt):
-        for monkey in list(self.monkeys):
-            monkey.cooldown -= dt
-
-            if 0.0 < monkey.cooldown:
-                continue
-
-            # MF: TODO: add more than target closest
-            closest = arcade.get_closest_sprite(monkey, self.bloons)
-            
-            if closest is None:
-                continue
-            bloon, distance = arcade.get_closest_sprite(monkey, self.bloons)
-
-            if bloon:
-                in_range = distance <= monkey.range
-                if in_range:
-                    direction = Vec2(*bloon.position) - Vec2(*monkey.position)
-                    self.darts.append(Dart(monkey, direction))
-                    monkey.cooldown = monkey.reload_time
 
     def update_bloons(self, dt):
         for bloon in list(self.bloons):
@@ -320,17 +303,20 @@ class World(arcade.View):
         self.ui.disable()
 
     def on_mouse_press(self, x, y, button, modifiers):
-        #right click to delete
-        
+
+        # Nico: First check for deleting a monkey
         if button == arcade.MOUSE_BUTTON_RIGHT:
+
             hits = arcade.get_sprites_at_point((x,y), self.monkeys)
             
             if hits:
                 monkey = hits[0]
                 monkey.kill()
                 self.selectedMonkey = None
+
             return
-        #check to see if clicking menu
+        
+        # Nico: Next check if clicking menu
         for monkey_type, buyable_tower in self.menu_items:
             if buyable_tower.rect.point_in_rect((x,y)):
                 if self.money >= monkey_type.cost:
@@ -340,7 +326,8 @@ class World(arcade.View):
                     self.selectedMonkey = None
                     print(self.placing)
                 return
-        #otherwise selecting a monkey on the map
+            
+        # Nico: Otherwise try to select a monkey on the map
         hits = arcade.get_sprites_at_point((x, y), self.monkeys)
         self.selectedMonkey = hits[0] if hits else None
 
@@ -353,15 +340,13 @@ class World(arcade.View):
     def on_key_press(self, symbol, modifiers):
         self.held_keys.add(symbol)
 
-        # if Key.I == symbol:
-        #     self.try_place_monkey(MonkeyType.DART, self.mousePosition)
-
+        # MF: TODO: Throw this out in favor of map editor
         if Key.T == symbol:
             self.track.add_node(self.mousePosition)
-
         if Key.Y == symbol:
             self.track.cycle_selected()
 
+        # MF: TODO: Eventually add a ui button for this
         if Key.O == symbol:
             print("Saving and quiting...")
             self.go_to_title()
