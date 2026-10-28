@@ -8,8 +8,12 @@ import arcade.key as Key
 
 from pyglet.math import Vec2
 
-from sprites import Bloon, BloonType, Dart, Monkey, MonkeyType
+from bloons.red import RedBloon
+from monkeys.dart import DartMonkey
 from track import MIN_NODES, Track
+
+
+MONKEY_TYPES = [DartMonkey]
 
 
 class Stage(Enum):
@@ -21,12 +25,12 @@ class World(arcade.View):
     def __init__(self):
         super().__init__()
 
-        self.background = arcade.load_texture(":assets:/TEST_MAP.jpg")
+        self.background = arcade.load_texture(":assets:/maps/placeholder.jpg")
 
         self.track = Track()
         self.bloons = arcade.SpriteList()
         self.monkeys = arcade.SpriteList()
-        self.darts = arcade.SpriteList()
+        self.projectiles = arcade.SpriteList()
 
         self.stage = Stage.PRE_ROUND
         self.round = 1
@@ -36,6 +40,7 @@ class World(arcade.View):
         self.mouse_position = Vec2()
         self.held_keys = set()
 
+        # MF: TODO: Eventually remove this in favor of a 'round engine'
         self.spawn_phase = 0.0
         self.spawn_wait = 0.0
 
@@ -91,65 +96,63 @@ class World(arcade.View):
         @self.start_button.event("on_click")
         def on_click(event):
             self.start_round()
-            
-        #side side menu on the right:
+
+        # Nico: The menu on the right that holds the buyable towers
         self.side_menu = anchor.add(
             arcade.gui.UIGridLayout(
-                column_count = 2,
-                row_count = (len(MonkeyType)+1) // 2,
-                horizontal_spacing = 10,
-                vertical_spacing = 10,
-                align_vertical= "top",
-                width = 150,
-                height = 540,
-                size_hint = None    
-            ).with_background(color = (40,40,40)).with_padding(all=10),
-            anchor_x = "right",
-            anchor_y = "center",
+                column_count=2,
+                row_count=(len(MONKEY_TYPES)+1) // 2,
+                horizontal_spacing=10,
+                vertical_spacing=10,
+                align_vertical="top",
+                width=150,
+                height=540,
+                size_hint=None
+            ).with_background(color=(40, 40, 40)).with_padding(all=10),
+            anchor_x="right",
+            anchor_y="center",
         )
-        #adding an icon to the menu for each tower
+
+        # Nico: For each tower, add an icon to the menu
         self.menu_items = []
-        for i,  type in enumerate(MonkeyType):
-            
+        for i,  type in enumerate(MONKEY_TYPES):
+            # MF: Because each monkey is a subclass, we have to create a dummy instance 
+            # to get constant attributes like cost, radius, sprite path, etc
+            dummy_instance = type(Vec2())
+
             icon = arcade.gui.UIImage(
-                texture = arcade.load_texture(":assets:/dart_monkey.png"),
+                texture=dummy_instance.texture,
                 height=48,
-                width = 48
+                width=48
             )
             label = arcade.gui.UILabel(
-                text = f"${type.cost}",
-                font_size = 14
+                text=f"${dummy_instance.cost}",
+                font_size=14
             )
-            
             buyable_tower = arcade.gui.UIBoxLayout(
-                children = [icon, label]
-                
+                children=[icon, label]
             )
-            
-            self.side_menu.add(buyable_tower, column = i % 2, row = i // 2)
-            
-            self.menu_items.append((type, buyable_tower))
-            
-            
+
+            self.side_menu.add(buyable_tower, column=i % 2, row=i // 2)
+            self.menu_items.append((type, dummy_instance.cost, buyable_tower))
 
     def on_update(self, dt):
         self.update_ui()
 
         keys = self.held_keys
 
+        # MF: TODO: Remove this eventually, because of the map editor
         # MF: Move the selected nodes
         dx = 0.0
         if Key.RIGHT in keys:
             dx += 1.0
         if Key.LEFT in keys:
             dx -= 1.0
-
         dy = 0.0
         if Key.UP in keys:
             dy += 1.0
         if Key.DOWN in keys:
             dy -= 1.0
-
         speed = 60 * dt
         self.track.move_selected(dx * speed, dy * speed)
 
@@ -179,33 +182,34 @@ class World(arcade.View):
 
         self.bloons.draw(pixelated=True)
         self.monkeys.draw(pixelated=True)
-        self.darts.draw(pixelated=True)
+        self.projectiles.draw(pixelated=True)
 
         # Nico: Draw the selected monkey's shoot radius
-        if self.selectedMonkey:
-            m = self.selectedMonkey
+        if self.selected_monkey:
+            m = self.selected_monkey
             arcade.draw_circle_outline(
                 m.position.x,
                 m.position.y,
                 m.range,
                 Color.YELLOW)
 
-        # Nico: Color the ghost monkey if its unable to be placed
+        # Nico: Color the ghost monkey RED if its unable to be placed
         if self.placing:
-            self.ghost.position = self.mousePosition
-            self.too_close = not self.can_place(self.placing, self.ghost.position)
+            self.ghost.position = self.mouse_position
+            self.too_close = not self.can_place(
+                self.ghost, self.ghost.position)
             if self.too_close:
                 self.ghost.color = Color.RED
             else:
                 self.ghost.color = Color.WHITE
-            
-            arcade.draw_sprite(self.ghost,pixelated = True)
+
+            arcade.draw_sprite(self.ghost, pixelated=True)
             arcade.draw_circle_outline(
                 self.ghost.position.x,
                 self.ghost.position.y,
                 self.ghost.range,
                 Color.YELLOW)
-        
+
         self.ui.draw()
 
     def update_ui(self):
@@ -218,7 +222,7 @@ class World(arcade.View):
         self.window.show_view(Title())
 
     def start_round(self):
-        if len(self.track.nodes) < MIN_NODES:
+        if not self.track.is_complete:
             print(f"Track needs at least {MIN_NODES} nodes")
             return
 
@@ -226,21 +230,22 @@ class World(arcade.View):
         self.stage = Stage.MID_ROUND
         self.start_button.visible = False
 
-    
-    def can_place(self, type, position):
+    def can_place(self, monkey, position):
         # MF: TODO: the +10 is just a magic number for the width of the track
-        d = type.radius + 10
-        return d < self.track.distance_to(position) and not arcade.check_for_collision_with_list(self.ghost, self.monkeys)
-    
+        # eventuallly we are going to need something configurable per track in the map editor
+        d = monkey.radius + 10
+        return d < self.track.distance_to(position) and not arcade.check_for_collision_with_list(monkey, self.monkeys)
+
     def try_place_monkey(self, type, position):
-        if self.money < type.cost:
+        monkey = type(position)
+        if self.money < monkey.cost:
             return
-        
-        if self.can_place(type,position):
-            self.monkeys.append(Monkey(position, type))
-            self.money -= type.cost
+
+        if self.can_place(monkey, position):
+            self.monkeys.append(monkey)
+            self.money -= monkey.cost
         else:
-            
+
             print("Too close")
 
     def update_mid_round(self, dt):
@@ -248,50 +253,34 @@ class World(arcade.View):
             print("you are dead!")
             self.go_to_title()
             return
-        
-        self.spawn_bloons(dt)
+
 
         # MF: TODO: Eventually we are going to want a 'round engine' type of thing
-        # self.round_spawner.update(dt)
+        # For example: self.round_spawner.update(dt) rather than this:
+        self.spawn_bloons(dt)
 
-        self.monkeys.update(dt)
-        self.bloons.update(dt)
-        self.projectiles.update(dt)
-
+        self.monkeys.update(dt, self.bloons, self.projectiles)
+        self.bloons.update(dt, self.track)
+        self.projectiles.update(dt, self.bloons)
         
+        self.remove_dead_entities()
+
     def spawn_bloons(self, dt):
         if 0 < math.sin(self.spawn_phase) and self.spawn_wait <= 0:
-            self.bloons.append(Bloon(BloonType.RED, 0.0))
+            self.bloons.append(RedBloon(0.0))
             self.spawn_wait = 1.0 / 6.0
         self.spawn_phase += 6.0 * dt
         self.spawn_wait -= dt
 
-    def update_bloons(self, dt):
+    def remove_dead_entities(self):
         for bloon in list(self.bloons):
-            speed = self.track.derivative(bloon.track_distance).length()
-            bloon.track_distance += bloon.type.speed * dt / speed
-            bloon.position = self.track.point(bloon.track_distance)
-
-    def update_darts(self, dt):
-        for dart in list(self.darts):
-            dart.position += dart.velocity * dt
-
-            on_screen = True
-            on_screen &= 0 <= dart.center_x <= self.window.width
-            on_screen &= 0 <= dart.center_y <= self.window.height
-            if not on_screen:
-                dart.remove_from_sprite_lists()
-
-            for bloon in arcade.check_for_collision_with_list(dart, self.bloons):
-                self.money += bloon.type.rbe
+            if bloon.dead:
+                self.money += bloon.rbe
                 bloon.remove_from_sprite_lists()
 
-                dart.parent.pop_count += 1
-                dart.pierce_left -= 1
-
-                if dart.pierce_left <= 0:
-                    dart.remove_from_sprite_lists()
-                    break
+        for projectile in list(self.projectiles):
+            if projectile.dead:
+                projectile.remove_from_sprite_lists()
 
     ###########################
     # MF: Unimportant callbacks
@@ -307,42 +296,42 @@ class World(arcade.View):
         # Nico: First check for deleting a monkey
         if button == arcade.MOUSE_BUTTON_RIGHT:
 
-            hits = arcade.get_sprites_at_point((x,y), self.monkeys)
-            
+            hits = arcade.get_sprites_at_point((x, y), self.monkeys)
+
             if hits:
                 monkey = hits[0]
                 monkey.kill()
-                self.selectedMonkey = None
+                self.selected_monkey = None
 
             return
-        
+
         # Nico: Next check if clicking menu
-        for monkey_type, buyable_tower in self.menu_items:
-            if buyable_tower.rect.point_in_rect((x,y)):
-                if self.money >= monkey_type.cost:
+        for monkey_type, cost, buyable_tower in self.menu_items:
+            if buyable_tower.rect.point_in_rect((x, y)):
+                if self.money >= cost:
                     self.placing = monkey_type
-                    self.ghost = Monkey(self.mousePosition, monkey_type)
+                    self.ghost = monkey_type(self.mouse_position)
                     self.ghost.alpha = 128
-                    self.selectedMonkey = None
+                    self.selected_monkey = None
                     print(self.placing)
                 return
-            
+
         # Nico: Otherwise try to select a monkey on the map
         hits = arcade.get_sprites_at_point((x, y), self.monkeys)
-        self.selectedMonkey = hits[0] if hits else None
+        self.selected_monkey = hits[0] if hits else None
 
     def on_mouse_motion(self, x, y, dx, dy):
-        self.mousePosition = Vec2(x, y)
+        self.mouse_position = Vec2(x, y)
 
     def on_mouse_drag(self, x, y, dx, dy, buttons, modifiers):
-        self.mousePosition = Vec2(x, y)
+        self.mouse_position = Vec2(x, y)
 
     def on_key_press(self, symbol, modifiers):
         self.held_keys.add(symbol)
 
         # MF: TODO: Throw this out in favor of map editor
         if Key.T == symbol:
-            self.track.add_node(self.mousePosition)
+            self.track.add_node(self.mouse_position)
         if Key.Y == symbol:
             self.track.cycle_selected()
 
@@ -353,11 +342,10 @@ class World(arcade.View):
 
     def on_key_release(self, symbol, modifiers):
         self.held_keys.discard(symbol)
-        
+
     def on_mouse_release(self, x, y, button, modifiers):
         if self.placing:
-            if (x,y) not in self.side_menu.rect:
-                self.try_place_monkey(self.placing, self.mousePosition)
-                
-            self.placing = None
+            if (x, y) not in self.side_menu.rect:
+                self.try_place_monkey(self.placing, self.mouse_position)
+
             self.placing = None

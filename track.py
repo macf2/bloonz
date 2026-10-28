@@ -1,4 +1,6 @@
 import math
+import arcade
+import arcade.color as Color
 from pyglet.math import Vec2
 
 
@@ -16,7 +18,7 @@ class Track:
         self.selected = 0
 
         self._cached_draw_samples = None
-        self._cached_distance_to_samples = None
+        self._cached_distance_check_samples = None
 
     @property
     def end(self):
@@ -27,7 +29,7 @@ class Track:
         return self.nodes[i:i + 4], t - i
 
     def get_point_at(self, t):
-        (p0, p1, p2, p3), t = self._segment(t)
+        (p0, p1, p2, p3), t = self._get_segment_nodes(t)
         t2 = t * t
         t3 = t2 * t
 
@@ -38,7 +40,7 @@ class Track:
         return (p0 * q1 + p1 * q2 + p2 * q3 + p3 * q4) * 0.5
 
     def get_derivative_at(self, t):
-        (p0, p1, p2, p3), t = self._segment(t)
+        (p0, p1, p2, p3), t = self._get_segment_nodes(t)
         t2 = t * t
 
         dq1 = -3.0 * t2 + 4.0 * t - 1.0
@@ -49,43 +51,52 @@ class Track:
 
     def _generate_samples(self, step):
         steps = int(self.end / step)
-        return [self.point(i * step) for i in range(steps)] + [self.point(self.end)]
+        return [self.get_point_at(i * step) for i in range(steps)] + [self.get_point_at(self.end)]
 
-    @property
-    def line_points(self):
-        if len(self.nodes) < MIN_NODES:
+    def get_draw_samples(self):
+        if not self.is_complete:
             return []
 
-        if self._line_points is None:
-            self._line_points = self._sample(DRAW_STEP)
+        if self._cached_draw_samples is None:
+            self._cached_draw_samples = self._generate_samples(DRAW_STEP)
 
-        return self._line_points
+        return self._cached_draw_samples
 
     def distance_to(self, position):
-        if len(self.nodes) < MIN_NODES:
+        if not self.is_complete:
             return math.inf
+
+        if self._cached_distance_check_samples is None:
+            self._cached_distance_check_samples = self._generate_samples(CLOSEST_POINT_STEP)
 
         # MF: TODO: Lerp between the two closest samples so that
         # long track segments are not choppy
         distances = [
-            (sample - position).length() for sample in self.line_points
+            (sample - position).length() for sample in self._cached_distance_check_samples
             ]
         
         return min(distances)
 
     def draw(self):
-        if self.track.line_points:
+        if self.is_complete:
             arcade.draw_line_strip(self.get_draw_samples(), (100, 100, 100), 10)
 
-        for i, node in enumerate(self.track.nodes):
-            color = Color.RED if i == self.track.selected else Color.BLUE
+        for i, node in enumerate(self.nodes):
+            color = Color.RED if i == self.selected else Color.BLUE
             arcade.draw_point(node.x, node.y, color, 10)
 
+    def _clear_cached_samples(self):
+        self._cached_draw_samples = None
+        self._cached_distance_check_samples = None
+
     # MF: TODO: These are probably going to get removed when map editor 
+    @property
+    def is_complete(self):
+        return MIN_NODES <= len(self.nodes)
+
     def add_node(self, position):
         self.nodes.append(Vec2(*position))
-        self._cached_draw_samples = None
-        self._cached_distance_to_samples = None
+        self._clear_cached_samples()
 
     def cycle_selected(self):
         if self.nodes:
@@ -94,4 +105,4 @@ class Track:
     def move_selected(self, dx, dy):
         if self.nodes:
             self.nodes[self.selected] += Vec2(dx, dy)
-            self._line_points = None
+            self._clear_cached_samples()

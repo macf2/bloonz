@@ -12,7 +12,7 @@ class Game(arcade.Window):
     def __init__(self):
         super().__init__(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE, update_rate=1 / 60)
 
-        music = arcade.load_sound(":assets:/background_music.wav")
+        music = arcade.load_sound(":assets:/music/placeholder.wav")
 
     def on_key_press(self, symbol, modifiers):
         if symbol == arcade.key.ESCAPE:
