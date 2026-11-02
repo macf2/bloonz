@@ -10,10 +10,11 @@ from pyglet.math import Vec2
 
 from bloons.red import RedBloon
 from monkeys.dart import DartMonkey
+from monkeys.tac_shooter import TacShooter
 from track import MIN_NODES, Track
 
 
-MONKEY_TYPES = [DartMonkey]
+MONKEY_TYPES = [DartMonkey, TacShooter]
 
 
 class Stage(Enum):

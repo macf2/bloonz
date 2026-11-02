@@ -1,0 +1,36 @@
+import arcade
+from pyglet.math import Vec2
+import math
+from monkeys.monkey import IMonkey
+from projectiles.dart import DartProjectile
+
+class TacShooter(IMonkey):
+    def __init__(self, position):
+        super().__init__(position, ":assets:/monkeys/tack.png") 
+        self.cost = 325
+        self.radius = 5
+        self.darts_per_shot = 8
+        
+    def update(self, dt, bloons, projectiles):
+        self.cooldown -= dt
+        if 0.0 < self.cooldown:
+            return
+
+        
+        closest = arcade.get_closest_sprite(self, bloons)
+        
+        if closest is None:
+            return
+        bloon, distance = closest
+
+        in_range = distance <= self.range
+        if in_range:
+            for i in range(0, self.darts_per_shot):
+                degree =  i * 360 / self.darts_per_shot 
+                rad = math.radians(degree)
+                direction = (math.sin(rad), math.cos(rad))
+                projectiles.append(DartProjectile(self, direction))
+            
+            self.cooldown = self.reload_time        
+        
+        
