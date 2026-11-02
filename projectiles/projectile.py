@@ -13,14 +13,21 @@ class IProjectile(arcade.Sprite):
         self.speed = 600.0
         self.pierce_left = 1
         self.dead = False
+        self.spawn_position = parent.position
+        self.distance_traveled = 0
+        self.max_distance = 1.3 * parent.range
 
     def update(self, dt, bloons):
         if self.dead:
             return
 
         self.position += self.direction * self.speed * dt
+        self.distance_traveled += self.speed * dt
 
         if self.is_off_screen():
+            self.dead = True
+            return
+        if self.distance_traveled >= self.max_distance:
             self.dead = True
             return
 

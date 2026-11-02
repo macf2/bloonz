@@ -9,7 +9,9 @@ class TacShooter(IMonkey):
         super().__init__(position, ":assets:/monkeys/tack.png") 
         self.cost = 325
         self.radius = 5
+        self.range = 75
         self.darts_per_shot = 8
+        self.reload_time = 1.375
         
     def update(self, dt, bloons, projectiles):
         self.cooldown -= dt
