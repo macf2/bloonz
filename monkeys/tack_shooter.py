@@ -4,7 +4,7 @@ import math
 from monkeys.monkey import IMonkey
 from projectiles.dart import DartProjectile
 
-class TacShooter(IMonkey):
+class TackShooter(IMonkey):
     def __init__(self, position):
         super().__init__(position, ":assets:/monkeys/tack.png") 
         self.cost = 325
