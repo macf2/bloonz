@@ -33,7 +33,6 @@ class Title(arcade.View):
             print("trying to enter map editor")
             # self.window.show_view(MapEditor())
 
-
     def on_show_view(self):
         self.ui.enable()
 
