@@ -12,11 +12,12 @@ from bloons.red import RedBloon
 from monkeys.dart import DartMonkey
 from monkeys.tack_shooter import TackShooter
 from monkeys.supermonkey import SuperMonkey
+from monkeys.bomb_tower import BombTower
 
 from track import MIN_NODES, Track
 
 
-MONKEY_TYPES = [DartMonkey, TackShooter, SuperMonkey]
+MONKEY_TYPES = [DartMonkey, TackShooter, BombTower, SuperMonkey]
 
 
 class Stage(Enum):
@@ -37,7 +38,7 @@ class World(arcade.View):
 
         self.stage = Stage.PRE_ROUND
         self.round = 1
-        self.money = 650
+        self.money = 5000
         self.lives = 40
 
         self.mouse_position = Vec2()
