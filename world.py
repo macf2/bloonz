@@ -13,11 +13,11 @@ from monkeys.dart import DartMonkey
 from monkeys.tack_shooter import TackShooter
 from monkeys.supermonkey import SuperMonkey
 from monkeys.bomb_tower import BombTower
-
+from monkeys.ice import IceMonkey
 from track import MIN_NODES, Track
 
 
-MONKEY_TYPES = [DartMonkey, TackShooter, BombTower, SuperMonkey]
+MONKEY_TYPES = [DartMonkey, TackShooter, BombTower, IceMonkey, SuperMonkey]
 
 
 class Stage(Enum):

@@ -42,8 +42,9 @@ class IProjectile(arcade.Sprite):
                 return
 
     def on_hit(self, bloon, bloons):
-        bloon.pop(self.parent)
-        self.pierce_left -= 1
+        if not bloon.is_frozen():
+            bloon.pop(self.parent)
+            self.pierce_left -= 1
 
     def is_off_screen(self):
         window = arcade.get_window()

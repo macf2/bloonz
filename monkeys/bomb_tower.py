@@ -10,6 +10,7 @@ class BombTower(IMonkey):
         self.cost = 900
         self.radius = 10
         self.range = 120
+        self.reload_time = 1.375
 
     def update(self, dt, bloons, projectiles):
         self.cooldown -= dt

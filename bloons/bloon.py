@@ -10,9 +10,13 @@ class IBloon(arcade.Sprite):
         self.rbe = 1
         self.speed = 60.0
         self.dead = False
+        self.freeze_time = 0.0
 
     def update(self, dt, track):
-        self.move_along_track(track, dt)
+        if self.freeze_time: #decrement the freezne time each frame
+            self.freeze_time =max(0.0, self.freeze_time - dt) 
+        else: #if freeze_time is zero then move it
+            self.move_along_track(track, dt)
 
     def move_along_track(self, track, dt):
         speed = track.get_derivative_at(self.track_distance).length()
@@ -25,3 +29,13 @@ class IBloon(arcade.Sprite):
 
         self.dead = True
         popper.pop_count += 1
+    def apply_freeze(self, time):
+        self.freeze_time += time
+        
+    def is_frozen(self):
+        if self.freeze_time > 0:
+            return True
+        else:
+            return False
+        
+    
