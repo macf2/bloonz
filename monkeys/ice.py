@@ -10,7 +10,7 @@ class IceMonkey(IMonkey):
         super().__init__(position, ':assets:/monkeys/ice.png')
         self.cost = 850
         self.radius = 10
-        self.range = 60
+        self.range = 80
         self.reload_time = 2.5
 
     def update(self, dt, bloons, projectiles):

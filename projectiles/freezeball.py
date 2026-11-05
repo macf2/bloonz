@@ -4,7 +4,8 @@ from projectiles.projectile import IProjectile
 class FreezeProjectile(IProjectile):
     
     def __init__(self, parent, direction):
-        super().__init__(parent, direction, ":assets:/projectiles/placeholder.png")
+        super().__init__(parent, direction, ":assets:/projectiles/freeze-orb.png")
+        self.scale = .075
         self.speed = 165
         self.pierce_left = 1
         self.blast_radius = 50

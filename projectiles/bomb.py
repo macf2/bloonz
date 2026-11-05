@@ -4,7 +4,8 @@ from projectiles.projectile import IProjectile
 class BombProjectile(IProjectile):
     
     def __init__(self, parent, direction):
-        super().__init__(parent, direction, ":assets:/projectiles/placeholder.png")
+        super().__init__(parent, direction, ":assets:/projectiles/bomb.png")
+        self.scale = .125
         self.speed = 330.0
         self.pierce_left = 1
         self.blast_radius = 50
