@@ -18,7 +18,8 @@ class BombProjectile(IProjectile):
             if hits < self.max_targets:
                 distance = (self.center_x - target.center_x )** 2 + (self.center_y - target.center_y) ** 2
                 if distance <= self.blast_radius ** 2:
-                    target.pop(self.parent)
+                    if not target.explosion_immune:
+                        target.pop(self.parent)
                     hits += 1
         self.dead = True
             

@@ -8,7 +8,15 @@ import arcade.key as Key
 
 from pyglet.math import Vec2
 
+import random
 from bloons.red import RedBloon
+from bloons.blue import BlueBloon
+from bloons.green import GreenBloon
+from bloons.yellow import YellowBloon
+from bloons.black import BlackBloon
+from bloons.white import WhiteBloon
+
+
 from monkeys.dart import DartMonkey
 from monkeys.tack_shooter import TackShooter
 from monkeys.supermonkey import SuperMonkey
@@ -18,7 +26,7 @@ from track import MIN_NODES, Track
 
 
 MONKEY_TYPES = [DartMonkey, TackShooter, BombTower, IceMonkey, SuperMonkey]
-
+BLOON_TYPES = [RedBloon, BlueBloon, GreenBloon, YellowBloon, BlackBloon, WhiteBloon]
 
 class Stage(Enum):
     PRE_ROUND = auto()
@@ -268,9 +276,9 @@ class World(arcade.View):
 
         self.remove_dead_entities()
 
-    def spawn_bloons(self, dt):
+    def spawn_bloons(self, dt): #right now just spawn random bloon types
         if 0 < math.sin(self.spawn_phase) and self.spawn_wait <= 0:
-            self.bloons.append(RedBloon(0.0))
+            self.bloons.append(random.choice(BLOON_TYPES)(0.0))
             self.spawn_wait = 1.0 / 6.0
         self.spawn_phase += 6.0 * dt
         self.spawn_wait -= dt
@@ -278,7 +286,9 @@ class World(arcade.View):
     def remove_dead_entities(self):
         for bloon in list(self.bloons):
             if bloon.dead:
-                self.money += bloon.rbe
+                self.money += 1
+                for child in bloon.get_children(self.track):
+                    self.bloons.append(child)
                 bloon.remove_from_sprite_lists()
 
         for projectile in list(self.projectiles):
