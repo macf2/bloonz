@@ -3,6 +3,12 @@ from enum import Enum, auto
 
 
 class MonkeyTargetMode(Enum):
+    '''
+        MF: 
+        Hold options for when the monkey is targeting 
+        the first, closest, strongest, or last
+        bloon in its radius
+    '''
     FIRST = auto(),
     CLOSE = auto(),
     STRONG = auto(),
@@ -10,6 +16,11 @@ class MonkeyTargetMode(Enum):
 
 
 class IMonkey(arcade.Sprite):
+    '''
+        MF: 
+        General interface that all the monkeys share
+    '''
+
     def __init__(self, position, sprite_path):
         super().__init__(sprite_path)
         self.width = self.height = 48
@@ -30,16 +41,15 @@ class IMonkey(arcade.Sprite):
 
             case MonkeyTargetMode.CLOSE:
                 result = arcade.get_closest_sprite(self, bloons)
-                
+
                 if result is not None:
                     bloon, distance = result
-                    
+
                     if distance < self.target_range:
                         return bloon
 
                 return None
 
-                
             case MonkeyTargetMode.FIRST:
                 max_t = -10000000
                 b = None
@@ -72,4 +82,3 @@ class IMonkey(arcade.Sprite):
                             max_rbe = bloon.rbe
                             b = bloon
                 return b
-

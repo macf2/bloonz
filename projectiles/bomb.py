@@ -9,6 +9,4 @@ class BombProjectile(IProjectile):
     #     self.pierce_left = 1
 
     # def on_hit(self, ):
-        #pass
-
-
+    # pass

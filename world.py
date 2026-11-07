@@ -17,11 +17,34 @@ MONKEY_TYPES = [DartMonkey]
 
 
 class Stage(Enum):
+    '''
+        MF: 
+        This represents what stage the world is in.
+        
+        PRE_ROUND:
+        The round has not started, monkeys are idle, no bloons. 
+        You can place/sell monkeys. 
+
+        MID_ROUND: 
+        You are in the middle of the round. Bloons are spawning. 
+        You can place/sell monkeys. 
+
+        This is used in the world.update() method to switch between 
+        updating the pre/mid round
+    '''
     PRE_ROUND = auto()
     MID_ROUND = auto()
 
 
 class World(arcade.View):
+
+    '''
+        MF: 
+        This class holds all the logic for the game world. 
+        It is the main screen the player will be in.
+        Its what you probably think of when you imagine actually 'playing the game'.
+    '''
+
     # MF: TODO: take in a map to load, once we get map loading working
     # def __init__(self, map_to_load):
     def __init__(self):
@@ -86,6 +109,7 @@ class World(arcade.View):
             align_y=-234
         )
 
+        # MF: Start button
         self.start_button = anchor.add(
             arcade.gui.UIFlatButton(
                 text="Start round",
@@ -97,9 +121,8 @@ class World(arcade.View):
             anchor_y="top",
             align_y=-100,
         )
-
         @self.start_button.event("on_click")
-        def on_click(event):
+        def start_button_click(_event):
             self.start_round()
 
         # Nico: The menu on the right that holds the buyable towers
@@ -120,10 +143,10 @@ class World(arcade.View):
 
         # Nico: For each tower, add an icon to the menu
         self.menu_items = []
-        for i,  type in enumerate(MONKEY_TYPES):
-            # MF: Because each monkey is a subclass, we have to create a dummy instance 
+        for i, monkey_type in enumerate(MONKEY_TYPES):
+            # MF: Because each monkey is a subclass, we have to create a dummy instance
             # to get constant attributes like cost, radius, sprite path, etc
-            dummy_instance = type(Vec2())
+            dummy_instance = monkey_type(Vec2())
 
             icon = arcade.gui.UIImage(
                 texture=dummy_instance.texture,
@@ -139,9 +162,9 @@ class World(arcade.View):
             )
 
             self.side_menu.add(buyable_tower, column=i % 2, row=i // 2)
-            self.menu_items.append((type, dummy_instance.cost, buyable_tower))
+            self.menu_items.append((monkey_type, dummy_instance.cost, buyable_tower))
 
-    def on_update(self, dt):
+    def on_update(self, delta_time):
         self.update_ui()
 
         keys = self.held_keys
@@ -158,7 +181,7 @@ class World(arcade.View):
             dy += 1.0
         if Key.DOWN in keys:
             dy -= 1.0
-        speed = 60 * dt
+        speed = 60 * delta_time
         self.track.move_selected(dx * speed, dy * speed)
 
         # MF: Per stage updates
@@ -167,7 +190,7 @@ class World(arcade.View):
                 pass
 
             case Stage.MID_ROUND:
-                self.update_mid_round(dt)
+                self.update_mid_round(delta_time)
 
     def on_draw(self):
         self.clear()
@@ -201,9 +224,8 @@ class World(arcade.View):
         # Nico: Color the ghost monkey RED if its unable to be placed
         if self.placing:
             self.ghost.position = self.mouse_position
-            self.too_close = not self.can_place(
-                self.ghost, self.ghost.position)
-            if self.too_close:
+
+            if self.check_if_monkey_collides_with_something(self.ghost, self.ghost.position):
                 self.ghost.color = Color.RED
             else:
                 self.ghost.color = Color.WHITE
@@ -235,18 +257,29 @@ class World(arcade.View):
         self.stage = Stage.MID_ROUND
         self.start_button.visible = False
 
-    def can_place(self, monkey, position):
+    def check_if_monkey_collides_with_something(self, monkey, position):
         # MF: TODO: the +10 is just a magic number for the width of the track
         # eventuallly we are going to need something configurable per track in the map editor
         d = monkey.collision_radius + 10
-        return d < self.track.distance_to(position) and not arcade.check_for_collision_with_list(monkey, self.monkeys)
 
-    def try_place_monkey(self, type, position):
-        monkey = type(position)
+        can_place = True
+
+        # MF: Check intersection with track
+        can_place &= d < self.track.distance_to(position)
+
+        # MF: Check collision with other monkey
+        can_place &= not arcade.check_for_collision_with_list(
+            monkey, self.monkeys)
+
+        return can_place
+
+    def try_place_monkey(self, monkey_class, position):
+        monkey = monkey_class(position)
+
         if self.money < monkey.cost:
             return
 
-        if self.can_place(monkey, position):
+        if self.check_if_monkey_collides_with_something(monkey, position):
             self.monkeys.append(monkey)
             self.money -= monkey.cost
         else:
@@ -326,7 +359,7 @@ class World(arcade.View):
     def on_mouse_motion(self, x, y, dx, dy):
         self.mouse_position = Vec2(x, y)
 
-    def on_mouse_drag(self, x, y, dx, dy, buttons, modifiers):
+    def on_mouse_drag(self, x, y, _dx, _dy, _buttons, _modifiers):
         self.mouse_position = Vec2(x, y)
 
     def on_key_press(self, symbol, modifiers):

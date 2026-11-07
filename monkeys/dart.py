@@ -23,4 +23,3 @@ class DartMonkey(IMonkey):
             direction = Vec2(*target_bloon.position) - Vec2(*self.position)
             projectiles.append(DartProjectile(self, direction))
             self.cooldown = self.reload_time
-    

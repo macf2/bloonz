@@ -13,6 +13,11 @@ MIN_NODES = 4
 
 
 class Track:
+    '''
+        MF: 
+        This class represents a catmull rom spline. 
+    '''
+
     def __init__(self):
         self.nodes: list[Vec2] = []
         self.selected = 0
@@ -72,19 +77,21 @@ class Track:
             return math.inf
 
         if self._cached_distance_check_samples is None:
-            self._cached_distance_check_samples = self._generate_samples(CLOSEST_POINT_STEP)
+            self._cached_distance_check_samples = self._generate_samples(
+                CLOSEST_POINT_STEP)
 
         # MF: TODO: Lerp between the two closest samples so that
         # long track segments are not choppy
         distances = [
             (sample - position).length() for sample in self._cached_distance_check_samples
-            ]
-        
+        ]
+
         return min(distances)
 
     def draw(self):
         if self.is_complete:
-            arcade.draw_line_strip(self.get_draw_samples(), (100, 100, 100), 10)
+            arcade.draw_line_strip(
+                self.get_draw_samples(), (100, 100, 100), 10)
 
         for i, node in enumerate(self.nodes):
             color = Color.RED if i == self.selected else Color.BLUE
@@ -94,7 +101,7 @@ class Track:
         self._cached_draw_samples = None
         self._cached_distance_check_samples = None
 
-    # MF: TODO: These are probably going to get removed when map editor 
+    # MF: TODO: These are probably going to get removed when map editor
     @property
     def is_complete(self):
         return MIN_NODES <= len(self.nodes)
