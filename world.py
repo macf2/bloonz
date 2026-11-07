@@ -10,8 +10,9 @@ from pyglet.math import Vec2
 
 from bloons.red import RedBloon
 from monkeys.dart import DartMonkey
-from track import MIN_NODES, Track
+from track import Track
 
+from consts import TRACK_MIN_NODES
 
 MONKEY_TYPES = [DartMonkey]
 
