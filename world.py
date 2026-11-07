@@ -22,12 +22,17 @@ class Stage(Enum):
 
 
 class World(arcade.View):
+    # MF: TODO: take in a map to load, once we get map loading working
+    # def __init__(self, map_to_load):
     def __init__(self):
         super().__init__()
 
+        # MF: TODO: Load the map, and have self.track and self.background
+        # Be taken from the map, instead of these defaults
+        # self.load_map(map_to_load)
         self.background = arcade.load_texture(":assets:/maps/placeholder.jpg")
-
         self.track = Track()
+
         self.bloons = arcade.SpriteList()
         self.monkeys = arcade.SpriteList()
         self.projectiles = arcade.SpriteList()
