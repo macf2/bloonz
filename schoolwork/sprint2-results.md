@@ -9,4 +9,4 @@ Refactor Results:
         You can't really see the results of this in game, but it made it easier to the team to add new towers and bloons.
 
 Map selection menu results:
-    
+    I made a dropdown menu to select maps from. This is not fully complete yet, as we do not have maps to select from. So I made placeholder entries bcause we have not formalized a way to load/represent maps yet. 
