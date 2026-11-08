@@ -106,3 +106,15 @@ class Track:
         if self.nodes:
             self.nodes[self.selected] += Vec2(dx, dy)
             self._clear_cached_samples()
+
+    def delete_selected(self):
+        if self.nodes:
+            self.nodes.pop(self.selected)
+    
+            # Keep selected index valid
+            if self.nodes:
+                self.selected = min(self.selected, len(self.nodes) - 1)
+            else:
+                self.selected = 0
+    
+            self._clear_cached_samples()
