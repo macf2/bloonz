@@ -22,12 +22,17 @@ class Stage(Enum):
 
 
 class World(arcade.View):
+    # MF: TODO: take in a map to load, once we get map loading working
+    # def __init__(self, map_to_load):
     def __init__(self):
         super().__init__()
 
+        # MF: TODO: Load the map, and have self.track and self.background
+        # Be taken from the map, instead of these defaults
+        # self.load_map(map_to_load)
         self.background = arcade.load_texture(":assets:/maps/placeholder.jpg")
-
         self.track = Track()
+
         self.bloons = arcade.SpriteList()
         self.monkeys = arcade.SpriteList()
         self.projectiles = arcade.SpriteList()
@@ -190,7 +195,7 @@ class World(arcade.View):
             arcade.draw_circle_outline(
                 m.position.x,
                 m.position.y,
-                m.range,
+                m.target_range,
                 Color.YELLOW)
 
         # Nico: Color the ghost monkey RED if its unable to be placed
@@ -207,7 +212,7 @@ class World(arcade.View):
             arcade.draw_circle_outline(
                 self.ghost.position.x,
                 self.ghost.position.y,
-                self.ghost.range,
+                self.ghost.target_range,
                 Color.YELLOW)
 
         self.ui.draw()
@@ -233,7 +238,7 @@ class World(arcade.View):
     def can_place(self, monkey, position):
         # MF: TODO: the +10 is just a magic number for the width of the track
         # eventuallly we are going to need something configurable per track in the map editor
-        d = monkey.radius + 10
+        d = monkey.collision_radius + 10
         return d < self.track.distance_to(position) and not arcade.check_for_collision_with_list(monkey, self.monkeys)
 
     def try_place_monkey(self, type, position):
@@ -252,7 +257,6 @@ class World(arcade.View):
             print("you are dead!")
             self.go_to_title()
             return
-
 
         # MF: TODO: Eventually we are going to want a 'round engine' type of thing
         # For example: self.round_spawner.update(dt) rather than this:
@@ -348,3 +352,5 @@ class World(arcade.View):
                 self.try_place_monkey(self.placing, self.mouse_position)
 
             self.placing = None
+
+# track, map_sprites = load_map()

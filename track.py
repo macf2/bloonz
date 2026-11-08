@@ -20,8 +20,13 @@ class Track:
         self._cached_draw_samples = None
         self._cached_distance_check_samples = None
 
+    # MF: TODO: this @property thing is dumb, lets just remove this
     @property
     def end(self):
+        return len(self.nodes) - 3.0
+
+    def get_length(self):
+        # MF: - 3.0 because a track with 4 nodes only has length 1
         return len(self.nodes) - 3.0
 
     def _get_segment_nodes(self, t):
