@@ -3,6 +3,10 @@ from pyglet.math import Vec2
 
 
 class IProjectile(arcade.Sprite):
+    '''
+        MF: 
+        General interface that all projectiles share
+    '''
     def __init__(self, parent, direction, sprite_path):
         super().__init__(sprite_path)
         self.width = self.height = 10

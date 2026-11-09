@@ -2,6 +2,10 @@ import arcade
 
 
 class IBloon(arcade.Sprite):
+    '''
+        MF: 
+        General interface the all bloons share
+    '''
     def __init__(self, sprite_path, t):
         super().__init__(sprite_path)
         self.width = self.height = 32
@@ -28,6 +32,12 @@ class IBloon(arcade.Sprite):
             self.freeze_time =max(0.0, self.freeze_time - dt) 
         else: #if freeze_time is zero then move it
             self.move_along_track(track, dt)
+
+        if track.get_length() <= self.track_distance:
+            # MF: TODO: Leak the bloon, decrement health by rbe,
+            # how do we want to relay this back to the world?
+            print("leaked")
+            self.kill()
 
     def move_along_track(self, track, dt):
         speed = track.get_derivative_at(self.track_distance).length()
