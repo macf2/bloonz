@@ -8,3 +8,9 @@
 # Nico Lippiatt-Cook
 
 - I implemented 4 new towers and 5 new bloons as well as the different projectile behaviors of the towers. This is all merged into main, if you pull the main branch and run main.py and start a new save you can experiment with the new towers. First create the track by pressing T to spawn nodes. Then you can place the towers. Freeze tower shoots an orb that freezes bloons, bombtower shoots a bomb that does splash damage, tack shooter shoots tacks from 8 directions, and supermonkey is like the dart monkey but it has very little reload time and a lot of range. The new bloons spawn randomly, red is the basic, blue is a little faster and when you pop it a red one spawns, green is even faster and when popped a blue one spawns, yellow is very fast and spawns a green on pop, the black bloon is immune to bomb explosions and spawns two yellows on pop, white bloon is immune to freeze and spawns two yellow bloons on pop. 
+
+
+# Mac 
+
+- I refactored the way that entities (monkeys, projectiles, and bloons) are handled. Before we had enum types for the different type of entities (MonkeyType, BloonType, ProjectileType). now we have base itnerface classes (IBloon, IMonkey, IProjectile) that each type inherits from. ALso, rather than the world having functions to update the entities, they now have their own update methods. For example,instead of doing world.update_monkeys() you do world.monkeys.update().
+- I made a dropdown menu in the title screen to select maps.
