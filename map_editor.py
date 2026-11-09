@@ -36,7 +36,7 @@ class MapEditor(arcade.Window):
         # Load map image
         self.background = arcade.load_texture(
             str(self.map_folder / "test_map_1.jpg")
-)
+        )
 
         self.track = Track()
 
