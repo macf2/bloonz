@@ -86,6 +86,11 @@ class MapEditor(arcade.Window):
 
         print("Track saved!")
 
+    
+    def load_track(self):
+        file_path = self.map_folder / "track.json"
+
+
     def on_draw(self):
         self.clear()
     
