@@ -70,7 +70,7 @@ class MapEditor(arcade.Window):
 
         self.ui_manager.add(anchor)
 
-    # Save that map and spline path
+    # Save the map and spline path
     def save_track(self):
         data = {
             "points": [
