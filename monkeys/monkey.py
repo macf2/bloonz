@@ -1,5 +1,6 @@
-import arcade
 from enum import Enum, auto
+
+import arcade
 
 
 class MonkeyTargetMode(Enum):

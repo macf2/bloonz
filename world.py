@@ -1,29 +1,25 @@
 import math
+import random
 from enum import Enum, auto
 
 import arcade
-import arcade.gui
 import arcade.color as Color
+import arcade.gui
 import arcade.key as Key
-
 from pyglet.math import Vec2
 
-import random
-from bloons.red import RedBloon
+from bloons.black import BlackBloon
 from bloons.blue import BlueBloon
 from bloons.green import GreenBloon
-from bloons.yellow import YellowBloon
-from bloons.black import BlackBloon
+from bloons.red import RedBloon
 from bloons.white import WhiteBloon
-
-
-from monkeys.dart import DartMonkey
-from monkeys.tack_shooter import TackShooter
-from monkeys.supermonkey import SuperMonkey
+from bloons.yellow import YellowBloon
 from monkeys.bomb_tower import BombTower
+from monkeys.dart import DartMonkey
 from monkeys.ice import IceMonkey
+from monkeys.supermonkey import SuperMonkey
+from monkeys.tack_shooter import TackShooter
 from track import MIN_NODES, Track
-
 
 MONKEY_TYPES = [DartMonkey, TackShooter, BombTower, IceMonkey, SuperMonkey]
 BLOON_TYPES = [RedBloon, BlueBloon, GreenBloon, YellowBloon, BlackBloon, WhiteBloon]

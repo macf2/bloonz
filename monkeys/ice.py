@@ -5,6 +5,7 @@ from pyglet.math import Vec2
 from monkeys.monkey import IMonkey
 from projectiles.freezeball import FreezeProjectile
 
+
 class IceMonkey(IMonkey):
     def __init__(self, position):
         super().__init__(position, ':assets:/monkeys/ice.png')

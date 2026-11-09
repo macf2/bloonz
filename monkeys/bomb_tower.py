@@ -4,6 +4,7 @@ from pyglet.math import Vec2
 from monkeys.monkey import IMonkey
 from projectiles.bomb import BombProjectile
 
+
 class BombTower(IMonkey):
     def __init__(self, position):
         super().__init__(position, ':assets:/monkeys/bomb.png')

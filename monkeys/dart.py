@@ -4,6 +4,7 @@ from pyglet.math import Vec2
 from monkeys.monkey import IMonkey
 from projectiles.dart import DartProjectile
 
+
 class DartMonkey(IMonkey):
     def __init__(self, position):
         super().__init__(position, ':assets:/monkeys/dart.png')

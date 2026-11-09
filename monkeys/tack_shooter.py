@@ -1,8 +1,10 @@
-import arcade
-from pyglet.math import Vec2
 import math
+
+import arcade
+
 from monkeys.monkey import IMonkey
 from projectiles.tack import TackProjectile
+
 
 class TackShooter(IMonkey):
     def __init__(self, position):
@@ -27,7 +29,7 @@ class TackShooter(IMonkey):
 
         in_range = distance <= self.range
         if in_range:
-            for i in range(0, self.darts_per_shot):
+            for i in range(self.darts_per_shot):
                 degree =  i * 360 / self.darts_per_shot 
                 rad = math.radians(degree)
                 direction = (math.sin(rad), math.cos(rad))

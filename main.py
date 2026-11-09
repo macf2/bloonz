@@ -1,5 +1,7 @@
 from pathlib import Path
+
 import arcade
+
 from title import Title
 
 WINDOW_WIDTH = 960

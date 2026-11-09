@@ -1,8 +1,8 @@
 import math
+
 import arcade
 import arcade.color as Color
 from pyglet.math import Vec2
-
 
 CLOSEST_POINT_STEP = 0.05
 DRAW_STEP = 0.01
