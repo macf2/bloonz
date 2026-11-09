@@ -1,2 +1,6 @@
+# GitHub Links:
+- MAIN: https://github.com/macf2/bloonz/tree/main
+- REFACTOR: https://github.com/macf2/bloonz/tree/refactor
+
 # Isaac Young:
 - I have started to implement the map editor. This can be found on the refactor branch of our project. Pull the refactor branch run map_editor.py and an image of a map will appear you can place the spline down by clicking on the map. Select and move exisiting nodes by clicking on them and dragging, and delete nodes by selecting them and clicking backspace on your keyboard. Once you've placed you path down you can hit the save button in the top left of the window. If you go into blooz/assets/maps/map_1 and select the track.json file you can see the file update with the coordinates of the spline when you hit save. More user firendly UI will be implemented later also ability to pick a custom image. I didn't do round mechanics because where still building out core functionality so it didn't really end up making sense for this leg of the project.
