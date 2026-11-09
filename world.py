@@ -30,7 +30,7 @@ class World(arcade.View):
         # MF: TODO: Load the map, and have self.track and self.background
         # Be taken from the map, instead of these defaults
         # self.load_map(map_to_load)
-        self.background = arcade.load_texture(":assets:/maps/placeholder.jpg")
+        self.background = arcade.load_texture(":assets:/maps/map_1/test_map_1.jpg")
         self.track = Track()
 
         self.bloons = arcade.SpriteList()
