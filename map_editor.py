@@ -42,7 +42,7 @@ class MapEditor(arcade.Window):
 
         self.dragging = False
 
-        # Load existing spline, if available
+        # Loads the map
         self.load_track()
 
         self.ui_manager = arcade.gui.UIManager()
@@ -86,7 +86,8 @@ class MapEditor(arcade.Window):
 
         print("Track saved!")
 
-    
+    # TODO: make it so that it places the spline over the image if it has one. 
+    # This is also relevant loading them map to play the game.
     def load_track(self):
         file_path = self.map_folder / "track.json"
 
