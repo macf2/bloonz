@@ -25,13 +25,28 @@ class IMonkey(arcade.Sprite):
     def __init__(self, position, sprite_path):
         super().__init__(sprite_path)
         self.width = self.height = 48
+
+        # MF: XY position in world
         self.position = position
+
+        # MF: How much money it costs
         self.cost = 0
+        
+        # MF: How far around self.position are thing excluded from being placed 
         self.collision_radius = 10
+
+        self.max_range = 1000
+
+        # MF: Max range at which a tower can 'see' a bloon
         self.target_range = 100.0
+
         self.reload_time = 2.5 / 3.0
         self.cooldown = 0.0
+
+        # MF: How many bloons the tower has popped
         self.pop_count = 0
+
+        # MF: What bloon the tower targets
         self.targeting_mode = MonkeyTargetMode.CLOSE
 
     def update(self, dt, bloons, projectiles):

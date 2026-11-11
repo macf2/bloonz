@@ -50,6 +50,11 @@ class Track:
         dq2 = 9.0 * t2 - 10.0 * t
         dq3 = -9.0 * t2 + 8.0 * t + 1.0
         dq4 = 3.0 * t2 - 2.0 * t
+
+        # MF: TODO: Add a minimum size for it to be so that you cant divide by zero
+        # we ran into this bug when you plcae 3 nodes ontop of eachother so the dervivative evaluates to 
+        # zero and divideby zero error
+
         return (p0 * dq1 + p1 * dq2 + p2 * dq3 + p3 * dq4) * 0.5
 
     def _generate_samples(self, step):

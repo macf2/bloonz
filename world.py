@@ -281,7 +281,7 @@ class World(arcade.View):
         can_place &= not arcade.check_for_collision_with_list(
             monkey, self.monkeys)
 
-        return can_place
+        return not can_place
 
     def try_place_monkey(self, monkey_class, position):
         monkey = monkey_class(position)
@@ -290,10 +290,10 @@ class World(arcade.View):
             return
 
         if self.check_if_monkey_collides_with_something(monkey, position):
+            print("Too close")
+        else:
             self.monkeys.append(monkey)
             self.money -= monkey.cost
-        else:
-            print("Too close")
 
     def update_mid_round(self, dt):
         if self.lives <= 0:
@@ -311,12 +311,15 @@ class World(arcade.View):
 
         self.remove_dead_entities()
 
-    def spawn_bloons(self, dt): #right now just spawn random bloon types
+    def spawn_bloons(self, dt): # Nico: right now just spawn random bloon types
         if 0 < math.sin(self.spawn_phase) and self.spawn_wait <= 0:
-            self.bloons.append(random.choice(BLOON_TYPES)(0.0))
+            # self.bloons.append(random.choice(BLOON_TYPES)(0.0))
+            self.bloons.append(YellowBloon(0.0))
             self.spawn_wait = 1.0 / 6.0
         self.spawn_phase += 6.0 * dt
         self.spawn_wait -= dt
+
+
 
     def remove_dead_entities(self):
         for bloon in list(self.bloons):
@@ -324,6 +327,9 @@ class World(arcade.View):
                 self.money += 1
                 for child in bloon.get_children(self.track):
                     self.bloons.append(child)
+                bloon.remove_from_sprite_lists()
+            if bloon.leaked:
+                self.lives -= bloon.rbe
                 bloon.remove_from_sprite_lists()
 
         for projectile in list(self.projectiles):
@@ -397,5 +403,3 @@ class World(arcade.View):
                 self.try_place_monkey(self.placing, self.mouse_position)
 
             self.placing = None
-
-# track, map_sprites = load_map()

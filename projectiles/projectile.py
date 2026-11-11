@@ -19,7 +19,10 @@ class IProjectile(arcade.Sprite):
         self.dead = False
         self.spawn_position = parent.position
         self.distance_traveled = 0
-        self.max_distance = 1.3 * parent.range
+
+        self.max_distance = 1.3 * parent.max_range
+
+        self.life_timer = 0.25
 
     def update(self, dt, bloons):
         if self.dead:
@@ -44,6 +47,11 @@ class IProjectile(arcade.Sprite):
             if self.pierce_left <= 0:
                 self.dead = True
                 return
+
+
+        self.life_timer -= dt
+        if self.life_timer < 0.0:
+            self.dead = True
 
     def on_hit(self, bloon, bloons):
         if not bloon.is_frozen():
