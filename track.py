@@ -3,16 +3,14 @@ import math
 import arcade
 import arcade.color as Color
 from pyglet.math import Vec2
-
-CLOSEST_POINT_STEP = 0.05
-DRAW_STEP = 0.01
-
-# MF: TODO: Rather than having half baked paths exist and checking if they are half made,
-# just dont create the path object until there are 4 points
-MIN_NODES = 4
-
+from consts import TRACK_MIN_NODES, TRACK_CLOSEST_POINT_STEP, TRACK_DRAW_STEP
 
 class Track:
+    '''
+        MF: 
+        This class represents a catmull rom spline. 
+    '''
+
     def __init__(self):
         self.nodes: list[Vec2] = []
         self.selected = 0
@@ -20,8 +18,13 @@ class Track:
         self._cached_draw_samples = None
         self._cached_distance_check_samples = None
 
+    # MF: TODO: this @property thing is dumb, lets just remove this
     @property
     def end(self):
+        return len(self.nodes) - 3.0
+
+    def get_length(self):
+        # MF: - 3.0 because a track with 4 nodes only has length 1
         return len(self.nodes) - 3.0
 
     def _get_segment_nodes(self, t):
@@ -58,7 +61,7 @@ class Track:
             return []
 
         if self._cached_draw_samples is None:
-            self._cached_draw_samples = self._generate_samples(DRAW_STEP)
+            self._cached_draw_samples = self._generate_samples(TRACK_DRAW_STEP)
 
         return self._cached_draw_samples
 
@@ -67,19 +70,21 @@ class Track:
             return math.inf
 
         if self._cached_distance_check_samples is None:
-            self._cached_distance_check_samples = self._generate_samples(CLOSEST_POINT_STEP)
+            self._cached_distance_check_samples = self._generate_samples(
+                TRACK_CLOSEST_POINT_STEP)
 
         # MF: TODO: Lerp between the two closest samples so that
         # long track segments are not choppy
         distances = [
             (sample - position).length() for sample in self._cached_distance_check_samples
-            ]
-        
+        ]
+
         return min(distances)
 
     def draw(self):
         if self.is_complete:
-            arcade.draw_line_strip(self.get_draw_samples(), (100, 100, 100), 10)
+            arcade.draw_line_strip(
+                self.get_draw_samples(), (100, 100, 100), 10)
 
         for i, node in enumerate(self.nodes):
             color = Color.RED if i == self.selected else Color.BLUE
@@ -89,10 +94,10 @@ class Track:
         self._cached_draw_samples = None
         self._cached_distance_check_samples = None
 
-    # MF: TODO: These are probably going to get removed when map editor 
+    # MF: TODO: These are probably going to get removed when map editor
     @property
     def is_complete(self):
-        return MIN_NODES <= len(self.nodes)
+        return TRACK_MIN_NODES <= len(self.nodes)
 
     def add_node(self, position):
         self.nodes.append(Vec2(*position))
@@ -105,4 +110,16 @@ class Track:
     def move_selected(self, dx, dy):
         if self.nodes:
             self.nodes[self.selected] += Vec2(dx, dy)
+            self._clear_cached_samples()
+
+    def delete_selected(self):
+        if self.nodes:
+            self.nodes.pop(self.selected)
+    
+            # Keep selected index valid
+            if self.nodes:
+                self.selected = min(self.selected, len(self.nodes) - 1)
+            else:
+                self.selected = 0
+    
             self._clear_cached_samples()
