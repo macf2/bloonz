@@ -10,8 +10,8 @@ class TackShooter(IMonkey):
     def __init__(self, position):
         super().__init__(position, ":assets:/monkeys/tack.png") 
         self.cost = 325
-        self.radius = 10
-        self.range = 75
+        self.collision_radius = 10
+        self.target_range = 75
         self.darts_per_shot = 8
         self.reload_time = 1.375
         
