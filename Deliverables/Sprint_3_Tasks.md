@@ -1,6 +1,6 @@
 # SPRINT 3 TASKS
 
- ROUND MECHANICS: Hard, Essential | Nico 
+ROUND MECHANICS: Hard, Essential | Nico 
 -Progressing rounds when all bloons popped
 -Money gained when round complete
 -The bloons per round is pulled from json files ie {5 red, 8 blue, 5 red} etc
