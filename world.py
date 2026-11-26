@@ -1,5 +1,6 @@
 import math
 import random
+
 from enum import Enum, auto
 
 import arcade
@@ -19,9 +20,18 @@ from monkeys.dart import DartMonkey
 from monkeys.ice import IceMonkey
 from monkeys.supermonkey import SuperMonkey
 from monkeys.tack_shooter import TackShooter
-
+from win_screen import WinScreen
 from track import Track
 from consts import TRACK_MIN_NODES
+from round_engine import RoundEngine
+BLOON_BY_NAME = {
+    "red": RedBloon,
+    "blue": BlueBloon,
+    "green": GreenBloon,
+    "yellow": YellowBloon,
+    "black": BlackBloon,
+    "white": WhiteBloon,
+}
 
 MONKEY_TYPES = [DartMonkey, TackShooter, BombTower, IceMonkey, SuperMonkey]
 BLOON_TYPES = [RedBloon, BlueBloon, GreenBloon, YellowBloon, BlackBloon, WhiteBloon]
@@ -78,9 +88,10 @@ class World(arcade.View):
         self.mouse_position = Vec2()
         self.held_keys = set()
 
-        # MF: TODO: Eventually remove this in favor of a 'round engine'
-        self.spawn_phase = 0.0
-        self.spawn_wait = 0.0
+        #round engineS
+        
+        self.round_engine = RoundEngine.from_file("rounds.json", self.spawn_bloon)
+
 
         self.init_ui()
 
@@ -118,6 +129,21 @@ class World(arcade.View):
             align_x=200,
             align_y=-234
         )
+        
+        self.round_label = anchor.add(
+            arcade.gui.UILabel(
+                text="",
+                width=260,
+                height=34,
+                font_size=20,
+                bold=True
+            ),
+            anchor_x="left",
+            anchor_y="top",
+            align_x=200,
+            align_y=-268
+        )
+
 
         # MF: Start button
         self.start_button = anchor.add(
@@ -252,6 +278,7 @@ class World(arcade.View):
     def update_ui(self):
         self.money_label.text = f"{self.money}"
         self.lives_label.text = f"{self.lives}"
+        self.round_label.text = f"Round {self.round} / {len(self.round_engine.rounds)}"
 
     def go_to_title(self):
         # MF: TODO: do something about circular dependency
@@ -262,6 +289,11 @@ class World(arcade.View):
         if not self.track.is_complete:
             print(f"Track needs at least {TRACK_MIN_NODES} nodes")
             return
+        if not self.round_engine.start_next_round():
+            print("No more rounds")
+            return
+        
+        
 
         print("Started round")
         self.stage = Stage.MID_ROUND
@@ -301,9 +333,8 @@ class World(arcade.View):
             self.go_to_title()
             return
 
-        # MF: TODO: Eventually we are going to want a 'round engine' type of thing
-        # For example: self.round_spawner.update(dt) rather than this:
-        self.spawn_bloons(dt)
+        # Round engine
+        self.round_engine.update(dt)
 
         self.monkeys.update(dt, self.bloons, self.projectiles)
         self.bloons.update(dt, self.track)
@@ -311,13 +342,24 @@ class World(arcade.View):
 
         self.remove_dead_entities()
 
-    def spawn_bloons(self, dt): # Nico: right now just spawn random bloon types
-        if 0 < math.sin(self.spawn_phase) and self.spawn_wait <= 0:
-            # self.bloons.append(random.choice(BLOON_TYPES)(0.0))
-            self.bloons.append(YellowBloon(0.0))
-            self.spawn_wait = 1.0 / 6.0
-        self.spawn_phase += 6.0 * dt
-        self.spawn_wait -= dt
+        if self.round_engine.spawning_done() and len(self.bloons) == 0:
+            self.end_round()
+
+    def spawn_bloon(self, bloon_type): # Nico: spawning with round engine
+        self.bloons.append(BLOON_BY_NAME[bloon_type](0.0))
+        
+        
+    def end_round(self):
+        self.projectiles.clear()
+        self.money += (100 - self.round)
+        self.round += 1
+        self.stage = Stage.PRE_ROUND
+        self.start_button.visible = True
+
+        if not self.round_engine.has_next_round():
+            print("You win!")
+            self.window.show_view(WinScreen(self.lives))
+    
 
 
 

@@ -1,0 +1,15 @@
+[
+  [
+    {"type": "red", "count": 10, "interval": 0.5}
+  ],
+  [
+    {"type": "red", "count": 10, "interval": 0.3},
+    {"wait": 2.0},
+    {"type": "blue", "count": 5, "interval": 0.4}
+  ],
+  [
+    {"type": "blue", "count": 10, "interval": 0.3},
+    {"wait": 1.5},
+    {"type": "green", "count": 5, "interval": 0.4}
+  ]
+]

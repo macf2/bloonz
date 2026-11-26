@@ -27,7 +27,7 @@ class TackShooter(IMonkey):
             return
         bloon, distance = closest
 
-        in_range = distance <= self.range
+        in_range = distance <= self.target_range
         if in_range:
             for i in range(self.darts_per_shot):
                 degree =  i * 360 / self.darts_per_shot 
